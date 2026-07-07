@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Küchendienst</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #f3e6d6;
+      --accent: #2c7a7b;
+      --accent-light: #3db5ae;
+      --danger: #c53030;
+      --card: #ffffff;
+      --text: #1a202c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 1rem 1.2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    header span.version {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    main {
+      padding: 1rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .tab-button {
+      flex: 1 1 140px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: none;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text);
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .tab-button.active {
+      background: var(--accent);
+      color: white;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 0.4rem 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    button.primary {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(44,122,123,0.5);
+    }
+    button.secondary {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: #edf2f7;
+      color: var(--text);
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button.small {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 999px;
+    }
+    button.danger {
+      background: var(--danger);
+      color: white;
+    }
+    .person-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .person-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      border-radius: 12px;
+      margin-bottom: 0.3rem;
+      background: #f7fafc;
+    }
+    .person-meta {
+      font-size: 0.8rem;
+      color: #4a5568;
+    }
+    .pill {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(45, 55, 72, 0.08);
+    }
+    .pill.kind { background: rgba(56, 161, 105, 0.18); }
+    .pill.supervisor { background: rgba(49, 130, 206, 0.18); }
+    .pill.punished { background: rgba(197, 48, 48, 0.18); }
+    .punish-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .punish-toggle input {
+      transform: scale(1.1);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.8rem;
+    }
+    .service-result {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(26, 32, 44, 0.08);
+      font-size: 0.75rem;
+      margin-right: 0.3rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(26, 32, 44, 0.92);
+      color: white;
+      padding: 0.6rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .toast.success { background: rgba(44, 122, 123, 0.95); }
+    .toast.error { background: rgba(197, 48, 48, 0.95); }
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.2rem; }
+      main { padding: 0.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🍳 Küchendienst</h1>
+    <span class="version">Version: 1.0.0</span>
+  </header>
+  <main>
+    <div class="tabs">
+      <button class="tab-button active" data-tab="persons">Personen</button>
+      <button class="tab-button" data-tab="punish">Strafküchendienst</button>
+      <button class="tab-button" data-tab="settings">Einstellungen</button>
+      <button class="tab-button" data-tab="service">Dienst generieren</button>
+    </div>
+
+    <section id="tab-persons" class="card">
+      <h2>Personen verwalten</h2>
+      <div class="grid">
+        <div>
+          <label for="person-name">Name</label>
+          <input id="person-name" type="text" placeholder="Name eingeben">
+
+          <label for="person-role">Rolle</label>
+          <select id="person-role">
+            <option value="kind">Kind</option>
+            <option value="betreuer">Betreuer</option>
+          </select>
+          <button class="primary" id="add-person">Person hinzufügen</button>
+        </div>
+        <div>
+          <p style="font-size:0.9rem; color:#4a5568; margin-top:0;">Hinweis: Betreuer können keine Strafküchendienste erhalten. Kinder können später im Tab "Strafküchendienst" markiert werden.</p>
+        </div>
+      </div>
+      <hr style="margin:0.8rem 0; border:none; border-top:1px solid #e2e8f0;">
+      <ul class="person-list" id="person-list"></ul>
+    </section>
+
+    <section id="tab-punish" class="card" style="display:none;">
+      <h2>Strafküchendienst markieren</h2>
+      <p style="font-size:0.9rem; color:#4a5568;">Hier kannst du für Kinder Strafküchendienst aktivieren. Diese Kinder werden bei der Dienstvergabe bevorzugt berücksichtigt.</p>
+      <ul class="person-list" id="punish-list"></ul>
+    </section>
+
+    <section id="tab-settings" class="card" style="display:none;">
+      <h2>Einstellungen</h2>
+      <div class="grid">
+        <div>
+          <label for="children-per-service">Kinder pro Küchendienst (Standard)</label>
+          <input id="children-per-service" type="number" min="1" value="3">
+        </div>
+        <div>
+          <label for="min-punished-per-service">Minimale Strafkinder pro Dienst</label>
+          <input id="min-punished-per-service" type="number" min="0" value="1">
+        </div>
+        <div>
+          <label for="supervisors-per-service">Betreuer pro Dienst</label>
+          <input id="supervisors-per-service" type="number" min="1" value="1">
+        </div>
+      </div>
+      <button class="primary" id="save-settings">Einstellungen speichern</button>
+    </section>
+
+    <section id="tab-service" class="card" style="display:none;">
+      <h2>Küchendienst generieren</h2>
+      <div class="grid">
+        <div>
+          <label for="meal-select">Mahlzeit</label>
+          <select id="meal-select">
+            <option value="fruehstueck">Frühstück</option>
+            <option value="mittag">Mittagessen</option>
+            <option value="abend">Abendessen</option>
+          </select>
+
+          <label for="override-children">Kinderanzahl nur für diese Mahlzeit (optional)</label>
+          <input id="override-children" type="number" min="1" placeholder="leer lassen für Standard">
+
+          <button class="primary" id="generate-service" style="margin-top:0.5rem;">Dienst zufällig erzeugen</button>
+        </div>
+        <div>
+          <p style="font-size:0.9rem; color:#4a5568;">Regeln:
+          <br>• Mindestens ein Betreuer pro Dienst.
+          <br>• Konfigurierbare Anzahl Kinder.
+          <br>• Kinder mit Strafküchendienst werden bevorzugt eingeteilt.
+          <br>• Fairness: Wer seltener dran war, wird eher ausgewählt.</p>
+        </div>
+      </div>
+      <div id="service-output" class="service-result"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY_PERSONS = 'kuechendienst_persons_v1';
+    const STORAGE_KEY_SETTINGS = 'kuechendienst_settings_v1';
+    const STORAGE_KEY_HISTORY = 'kuechendienst_history_v1';
+
+    let persons = [];
+    let settings = {
+      childrenPerService: 3,
+      minPunishedChildrenPerService: 1,
+      supervisorsPerService: 1
+    };
+    let history = [];
+
+    function loadState() {
+      try {
+        const p = localStorage.getItem(STORAGE_KEY_PERSONS);
+        const s = localStorage.getItem(STORAGE_KEY_SETTINGS);
+        const h = localStorage.getItem(STORAGE_KEY_HISTORY);
+        persons = p ? JSON.parse(p) : [];
+        settings = s ? JSON.parse(s) : settings;
+        history = h ? JSON.parse(h) : [];
+      } catch (e) {
+        console.error('Fehler beim Laden des Zustands', e);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY_PERSONS, JSON.stringify(persons));
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+      } catch (e) {
+        console.error('Fehler beim Speichern des Zustands', e);
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.remove('success', 'error');
+      toast.classList.add(type);
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function renderPersons() {
+      const list = document.getElementById('person-list');
+      list.innerHTML = '';
+      if (persons.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Noch keine Personen hinzugefügt.';
+        li.style.fontSize = '0.9rem';
+        li.style.color = '#4a5568';
+        list.appendChild(li);
+        return;
+      }
+      persons.forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'person-item';
+        const left = document.createElement('div');
+        const name = document.createElement('div');
+        name.textContent = p.name;
+        const meta = document.createElement('div');
+        meta.className = 'person-meta';
+
+        const rolePill = document.createElement('span');
+        rolePill.className = 'pill ' + (p.role === 'kind' ? 'kind' : 'supervisor');
+        rolePill.textContent = p.role === 'kind' ? 'Kind' : 'Betreuer';
+        meta.appendChild(rolePill);
+
+        if (p.role === 'kind' && p.isPunished) {
+          const punishPill = document.createElement('span');
+          punishPill.className = 'pill punished';
+          punishPill.textContent = 'Strafküchendienst';
+          punishPill.style.marginLeft = '0.4rem';
+          meta.appendChild(punishPill);
+        }
+
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const right = document.createElement('div');
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'secondary small';
+        editBtn.textContent = 'Bearbeiten';
+        editBtn.onclick = () => editPerson(p.id);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'danger small';
+        delBtn.textContent = 'Löschen';
+        delBtn.style.marginLeft = '0.3rem';
+        delBtn.onclick = () => deletePerson(p.id);
+
+        right.appendChild(editBtn);
+        right.appendChild(delBtn);
+
+        li.appendChild(left);
+        li.appendChild(right);
+        list.appendChild(li);
+      });
+    }
+
+    function renderPunishList() {
+      const list = document.getElementById('punish-list');
+      list.innerHTML = '';
+      const children = persons.filter(p => p.role === 'kind');
+      if (children.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Keine Kinder in der Personenliste vorhanden.';
+        li.style.fontSize = '0.9rem';
+        li.style.color = '#4a5568';
+        list.appendChild(li);
+        return;
+      }
+      children.forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'person-item';
+        const left = document.createElement('div');
+        left.textContent = p.name;
+        const meta = document.createElement('div');
+        meta.className = 'person-meta';
+        meta.textContent = 'Strafküchendienste: ' + (p.punishDutiesCount || 0);
+        left.appendChild(meta);
+
+        const right = document.createElement('div');
+        right.className = 'punish-toggle';
+        const label = document.createElement('span');
+        label.textContent = 'Strafküchendienst';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !!p.isPunished;
+        checkbox.onchange = () => {
+          p.isPunished = checkbox.checked;
+          saveState();
+          renderPersons();
+          renderPunishList();
+        };
+        right.appendChild(label);
+        right.appendChild(checkbox);
+
+        li.appendChild(left);
+        li.appendChild(right);
+        list.appendChild(li);
+      });
+    }
+
+    function editPerson(id) {
+      const p = persons.find(x => x.id === id);
+      if (!p) return;
+      const newName = prompt('Neuen Namen für ' + p.name + ' eingeben:', p.name);
+      if (newName && newName.trim() !== '') {
+        p.name = newName.trim();
+      }
+      const newRole = prompt('Rolle ändern? "kind" oder "betreuer" (leer lassen für keine Änderung):', p.role);
+      if (newRole && (newRole === 'kind' || newRole === 'betreuer')) {
+        if (p.role === 'betreuer' && newRole === 'kind') {
+          p.role = 'kind';
+        } else if (p.role === 'kind' && newRole === 'betreuer') {
+          p.role = 'betreuer';
+          p.isPunished = false;
+        }
+      }
+      saveState();
+      renderPersons();
+      renderPunishList();
+    }
+
+    function deletePerson(id) {
+      if (!confirm('Diese Person wirklich löschen?')) return;
+      persons = persons.filter(p => p.id !== id);
+      saveState();
+      renderPersons();
+      renderPunishList();
+    }
+
+    function addPerson() {
+      const nameInput = document.getElementById('person-name');
+      const roleSelect = document.getElementById('person-role');
+      const name = nameInput.value.trim();
+      const role = roleSelect.value;
+      if (!name) {
+        showToast('Bitte einen Namen eingeben.', 'error');
+        return;
+      }
+      const id = Date.now() + '_' + Math.random().toString(36).substr(2,5);
+      persons.push({
+        id,
+        name,
+        role,
+        isPunished: false,
+        dutiesCount: 0,
+        punishDutiesCount: 0
+      });
+      nameInput.value = '';
+      roleSelect.value = 'kind';
+      saveState();
+      renderPersons();
+      renderPunishList();
+      showToast('Person hinzugefügt.', 'success');
+    }
+
+    function saveSettingsFromInputs() {
+      const childrenInput = document.getElementById('children-per-service');
+      const minPunishedInput = document.getElementById('min-punished-per-service');
+      const supervisorsInput = document.getElementById('supervisors-per-service');
+      const cp = parseInt(childrenInput.value, 10);
+      const mp = parseInt(minPunishedInput.value, 10);
+      const sp = parseInt(supervisorsInput.value, 10);
+      if (isNaN(cp) || cp < 1) {
+        showToast('Kinder pro Dienst muss mindestens 1 sein.', 'error');
+        return;
+      }
+      if (isNaN(mp) || mp < 0) {
+        showToast('Minimale Strafkinder dürfen nicht negativ sein.', 'error');
+        return;
+      }
+      if (isNaN(sp) || sp < 1) {
+        showToast('Betreuer pro Dienst muss mindestens 1 sein.', 'error');
+        return;
+      }
+      settings.childrenPerService = cp;
+      settings.minPunishedChildrenPerService = mp;
+      settings.supervisorsPerService = sp;
+      saveState();
+      showToast('Einstellungen gespeichert.', 'success');
+    }
+
+    function sortByDutyCounts(arr, punishMode = false) {
+      return arr.slice().sort((a, b) => {
+        const aCount = punishMode ? (a.punishDutiesCount || 0) : (a.dutiesCount || 0);
+        const bCount = punishMode ? (b.punishDutiesCount || 0) : (b.dutiesCount || 0);
+        if (aCount === bCount) {
+          return Math.random() < 0.5 ? -1 : 1;
+        }
+        return aCount - bCount;
+      });
+    }
+
+    function generateService() {
+      if (persons.length === 0) {
+        showToast('Bitte zuerst Personen hinzufügen.', 'error');
+        return;
+      }
+      const children = persons.filter(p => p.role === 'kind');
+      const supervisors = persons.filter(p => p.role === 'betreuer');
+      if (children.length === 0) {
+        showToast('Es gibt keine Kinder in der Liste.', 'error');
+        return;
+      }
+      if (supervisors.length === 0) {
+        showToast('Es gibt keine Betreuer in der Liste.', 'error');
+        return;
+      }
+
+      const overrideChildrenInput = document.getElementById('override-children');
+      const mealSelect = document.getElementById('meal-select');
+      const meal = mealSelect.value;
+      const overrideChildren = overrideChildrenInput.value ? parseInt(overrideChildrenInput.value, 10) : null;
+      const childrenPerService = overrideChildren && overrideChildren > 0 ? overrideChildren : settings.childrenPerService;
+      const minPunished = settings.minPunishedChildrenPerService;
+      const supervisorsPerService = settings.supervisorsPerService;
+
+      const punishedChildrenAll = children.filter(p => p.isPunished);
+      if (minPunished > 0 && punishedChildrenAll.length === 0) {
+        showToast('Es sind keine Strafkinder markiert, aber mindestens ein Strafkind pro Dienst verlangt.', 'error');
+        return;
+      }
+
+      if (childrenPerService < minPunished) {
+        showToast('Kinder pro Dienst ist kleiner als die minimale Strafkinder-Anzahl.', 'error');
+        return;
+      }
+
+      if (children.length < childrenPerService) {
+        showToast('Es gibt insgesamt zu wenige Kinder für diesen Dienst.', 'error');
+        return;
+      }
+
+      if (supervisors.length < supervisorsPerService) {
+        showToast('Es gibt zu wenige Betreuer für diesen Dienst.', 'error');
+        return;
+      }
+
+      let punishedSelected = [];
+      if (minPunished > 0) {
+        const sortedPunished = sortByDutyCounts(punishedChildrenAll, true);
+        const needed = Math.min(minPunished, sortedPunished.length);
+        punishedSelected = sortedPunished.slice(0, needed);
+      }
+
+      const remainingChildrenCount = childrenPerService - punishedSelected.length;
+      let normalCandidates = children.filter(p => !punishedSelected.includes(p));
+      const sortedNormal = sortByDutyCounts(normalCandidates, false);
+      const normalSelected = sortedNormal.slice(0, remainingChildrenCount);
+
+      const sortedSupervisors = sortByDutyCounts(supervisors, false);
+      const supervisorsSelected = sortedSupervisors.slice(0, supervisorsPerService);
+
+      if (punishedSelected.length + normalSelected.length < 1) {
+        showToast('Mindestens ein Kind muss im Dienst sein.', 'error');
+        return;
+      }
+
+      const service = {
+        id: Date.now(),
+        meal,
+        children: punishedSelected.concat(normalSelected),
+        supervisors: supervisorsSelected,
+        timestamp: new Date().toISOString()
+      };
+      history.push(service);
+
+      service.children.forEach(c => {
+        const ref = persons.find(p => p.id === c.id);
+        if (!ref) return;
+        ref.dutiesCount = (ref.dutiesCount || 0) + 1;
+        if (ref.isPunished) {
+          ref.punishDutiesCount = (ref.punishDutiesCount || 0) + 1;
+        }
+      });
+      service.supervisors.forEach(s => {
+        const ref = persons.find(p => p.id === s.id);
+        if (!ref) return;
+        ref.dutiesCount = (ref.dutiesCount || 0) + 1;
+      });
+
+      saveState();
+      renderPersons();
+      renderPunishList();
+      renderServiceOutput(service);
+      showToast('Küchendienst wurde generiert.', 'success');
+    }
+
+    function renderServiceOutput(service) {
+      const output = document.getElementById('service-output');
+      output.innerHTML = '';
+      const mealLabelMap = {
+        fruehstueck: 'Frühstück',
+        mittag: 'Mittagessen',
+        abend: 'Abendessen'
+      };
+      const headerCard = document.createElement('div');
+      headerCard.className = 'card';
+      const title = document.createElement('div');
+      title.innerHTML = '<strong>Mahlzeit:</strong> ' + (mealLabelMap[service.meal] || service.meal);
+      const meta = document.createElement('div');
+      meta.style.fontSize = '0.85rem';
+      meta.style.color = '#4a5568';
+      const punishedCount = service.children.filter(c => c.isPunished).length;
+      meta.innerHTML = '<span class="badge">Kinder: ' + service.children.length + '</span>' +
+                       '<span class="badge">Strafkinder: ' + punishedCount + '</span>' +
+                       '<span class="badge">Betreuer: ' + service.supervisors.length + '</span>';
+      headerCard.appendChild(title);
+      headerCard.appendChild(meta);
+      output.appendChild(headerCard);
+
+      const childrenCard = document.createElement('div');
+      childrenCard.className = 'card';
+      const chTitle = document.createElement('h3');
+      chTitle.textContent = 'Kinder im Dienst';
+      childrenCard.appendChild(chTitle);
+      const chList = document.createElement('ul');
+      chList.className = 'person-list';
+      service.children.forEach(c => {
+        const li = document.createElement('li');
+        li.className = 'person-item';
+        const left = document.createElement('div');
+        left.textContent = c.name;
+        const meta = document.createElement('div');
+        meta.className = 'person-meta';
+        meta.textContent = c.isPunished ? 'Strafküchendienst' : 'Normaler Küchendienst';
+        left.appendChild(meta);
+        li.appendChild(left);
+        chList.appendChild(li);
+      });
+      childrenCard.appendChild(chList);
+      output.appendChild(childrenCard);
+
+      const supCard = document.createElement('div');
+      supCard.className = 'card';
+      const sTitle = document.createElement('h3');
+      sTitle.textContent = 'Betreuer im Dienst';
+      supCard.appendChild(sTitle);
+      const sList = document.createElement('ul');
+      sList.className = 'person-list';
+      service.supervisors.forEach(s => {
+        const li = document.createElement('li');
+        li.className = 'person-item';
+        li.textContent = s.name;
+        sList.appendChild(li);
+      });
+      supCard.appendChild(sList);
+      output.appendChild(supCard);
+    }
+
+    function setupTabs() {
+      const buttons = document.querySelectorAll('.tab-button');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tabId = btn.dataset.tab;
+          document.getElementById('tab-persons').style.display = tabId === 'persons' ? '' : 'none';
+          document.getElementById('tab-punish').style.display = tabId === 'punish' ? '' : 'none';
+          document.getElementById('tab-settings').style.display = tabId === 'settings' ? '' : 'none';
+          document.getElementById('tab-service').style.display = tabId === 'service' ? '' : 'none';
+        });
+      });
+    }
+
+    function init() {
+      loadState();
+      setupTabs();
+      renderPersons();
+      renderPunishList();
+
+      document.getElementById('add-person').addEventListener('click', addPerson);
+      document.getElementById('save-settings').addEventListener('click', saveSettingsFromInputs);
+      document.getElementById('generate-service').addEventListener('click', generateService);
+
+      document.getElementById('children-per-service').value = settings.childrenPerService;
+      document.getElementById('min-punished-per-service').value = settings.minPunishedChildrenPerService;
+      document.getElementById('supervisors-per-service').value = settings.supervisorsPerService;
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.warn('Service Worker konnte nicht registriert werden:', err);
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
