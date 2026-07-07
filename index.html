@@ -606,20 +606,29 @@
       };
       history.push(service);
 
-      service.children.forEach(c => {
-        const ref = persons.find(p => p.id === c.id);
-        if (!ref) return;
-        ref.dutiesCount = (ref.dutiesCount || 0) + 1;
-        if (ref.isPunished) {
-          ref.punishDutiesCount = (ref.punishDutiesCount || 0) + 1;
-        }
-      });
-      service.supervisors.forEach(s => {
-        const ref = persons.find(p => p.id === s.id);
-        if (!ref) return;
-        ref.dutiesCount = (ref.dutiesCount || 0) + 1;
-      });
+      // Kinder: normale Dienste und Strafküchendienst getrennt zählen
+service.children.forEach(c => {
+  const ref = persons.find(p => p.id === c.id);
+  if (!ref) return;
+  if (ref.isPunished) {
+    // Strafküchendienst zählt nur in den Straf-Zähler,
+    // nicht in den normalen Dienst-Zähler
+    ref.punishDutiesCount = (ref.punishDutiesCount || 0) + 1;
+  } else {
+    // normaler Küchendienst
+    ref.dutiesCount = (ref.dutiesCount || 0) + 1;
+  }
+});
 
+// Betreuer: haben keine Strafdienste, nur normale Zählung
+service.supervisors.forEach(s => {
+  const ref = persons.find(p => p.id === s.id);
+  if (!ref) return;
+  ref.dutiesCount = (ref.dutiesCount || 0) + 1;
+});
+
+      
+    
       saveState();
       renderPersons();
       renderPunishList();
