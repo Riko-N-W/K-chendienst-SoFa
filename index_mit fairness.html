@@ -1,6 +1,81 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+  <!-- Firebase SDK (als ES-Module via CDN) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // Deine Firebase-Konfiguration
+  const firebaseConfig = {
+  apiKey: "AIzaSyDvYygxKPhbktVFedxgWncKfQfFK_CqahQ",
+  authDomain: "meine-app-84262.firebaseapp.com",
+  projectId: "meine-app-84262",
+  storageBucket: "meine-app-84262.firebasestorage.app",
+  messagingSenderId: "97959134696",
+  appId: "1:97959134696:web:55f33598cb1dd9cabd905d"
+};
+   const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function alleNamenLaden() {
+  const snapshot = await getDocs(collection(db, "personen"));
+  const personen = [];
+  snapshot.forEach(doc => {
+    personen.push({ id: doc.id, ...doc.data() });
+  });
+  console.log(personen); // [{id: "abc", name: "Max"}, ...]
+  return personen;
+}
+
+  function listeBeobachten(callback) {
+  onSnapshot(collection(db, "personen"), snapshot => {
+    const personen = [];
+    snapshot.forEach(doc => {
+      personen.push({ id: doc.id, ...doc.data() });
+    });
+    callback(personen); // wird bei jeder Änderung aufgerufen
+  });
+}
+
+// Verwendung:
+listeBeobachten(personen => {
+  // Hier deine UI aktualisieren
+  console.log("Aktualisiert:", personen);
+});
+
+  async function personHinzufuegen(name) {
+  const docRef = await addDoc(collection(db, "personen"), {
+    name: name,
+    erstellt: new Date()
+  });
+  console.log("Erstellt mit ID:", docRef.id);
+}
+
+  async function nameBearbeiten(id, neuerName) {
+  const docRef = doc(db, "personen", id);
+  await updateDoc(docRef, { name: neuerName });
+}
+
+  async function personLoeschen(id) {
+  await deleteDoc(doc(db, "personen", id));
+}
+
+
+ 
+
+  // Ab hier dein App-Code
+</script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Küchendienst</title>
